@@ -8,10 +8,10 @@ import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { ADMIN_SESSION_KEY, MESS_CARD_SERIAL_LENGTH, CSV_COLUMN_MAP } from "@/lib/constants";
 
-// --- Rate limiting (in-memory, resets on server restart) ---
+// --- Rate limiting ---
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
 const MAX_ATTEMPTS = 5;
-const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+const LOCKOUT_MS = 15 * 60 * 1000;
 
 function getClientIp(): string {
   const headersList = headers();
@@ -25,12 +25,10 @@ function getClientIp(): string {
 function checkRateLimit(ip: string): { allowed: boolean; retryAfterSeconds?: number } {
   const now = Date.now();
   const record = loginAttempts.get(ip);
-
-  if (record && now < record.resetAt) {
-    if (record.count >= MAX_ATTEMPTS) {
-      return { allowed: false, retryAfterSeconds: Math.ceil((record.resetAt - now) / 1000) };
-    }
-  } else if (!record || now >= record.resetAt) {
+  if (record && now < record.resetAt && record.count >= MAX_ATTEMPTS) {
+    return { allowed: false, retryAfterSeconds: Math.ceil((record.resetAt - now) / 1000) };
+  }
+  if (!record || now >= record.resetAt) {
     loginAttempts.set(ip, { count: 0, resetAt: now + LOCKOUT_MS });
   }
   return { allowed: true };
@@ -55,7 +53,6 @@ export async function attemptLogin(
   password: string
 ): Promise<{ success: boolean; message: string }> {
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-
   if (!ADMIN_PASSWORD) {
     console.error("ADMIN_PASSWORD environment variable is not set.");
     return { success: false, message: "Server configuration error." };
@@ -70,12 +67,10 @@ export async function attemptLogin(
     };
   }
 
-  // Use timing-safe comparison to prevent timing attacks
   let isMatch = false;
   try {
     isMatch = timingSafeEqual(Buffer.from(password), Buffer.from(ADMIN_PASSWORD));
   } catch {
-    // Buffer lengths differ → passwords don't match (timingSafeEqual throws on length mismatch)
     isMatch = false;
   }
 
@@ -100,6 +95,23 @@ export async function handleLogout() {
   revalidatePath("/", "layout");
 }
 
+// --- Stats ---
+export async function getStudentStats(): Promise<{
+  total: number;
+  allotted: number;
+  unallotted: number;
+}> {
+  try {
+    const [total, allotted] = await Promise.all([
+      prisma.student.count(),
+      prisma.student.count({ where: { messCardSerialNumber: { not: null } } }),
+    ]);
+    return { total, allotted, unallotted: total - allotted };
+  } catch {
+    return { total: 0, allotted: 0, unallotted: 0 };
+  }
+}
+
 // --- Student queries ---
 export async function getStudentByRollNo(rollNo: string): Promise<Student | null> {
   if (!rollNo?.trim()) return null;
@@ -113,15 +125,32 @@ export async function getStudentByRollNo(rollNo: string): Promise<Student | null
   }
 }
 
+export async function getUnallottedStudents(
+  page = 1,
+  pageSize = 50
+): Promise<{ students: Student[]; total: number }> {
+  try {
+    const where = { messCardSerialNumber: null };
+    const [students, total] = await Promise.all([
+      prisma.student.findMany({
+        where,
+        orderBy: { rollNo: "asc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.student.count({ where }),
+    ]);
+    return { students, total };
+  } catch {
+    return { students: [], total: 0 };
+  }
+}
+
 export async function allotMessCard(
   studentId: string,
   serialNumber: string
 ): Promise<{ success: boolean; message: string; student?: Student }> {
-  if (
-    !serialNumber ||
-    serialNumber.length !== MESS_CARD_SERIAL_LENGTH ||
-    !/^\d{4}$/.test(serialNumber)
-  ) {
+  if (!serialNumber || serialNumber.length !== MESS_CARD_SERIAL_LENGTH || !/^\d{4}$/.test(serialNumber)) {
     return { success: false, message: `Serial number must be ${MESS_CARD_SERIAL_LENGTH} digits.` };
   }
 
@@ -153,6 +182,42 @@ export async function allotMessCard(
   }
 }
 
+export async function updateMessCardSerial(
+  studentId: string,
+  newSerial: string
+): Promise<{ success: boolean; message: string; student?: Student }> {
+  if (!newSerial || newSerial.length !== MESS_CARD_SERIAL_LENGTH || !/^\d{4}$/.test(newSerial)) {
+    return { success: false, message: `Serial number must be ${MESS_CARD_SERIAL_LENGTH} digits.` };
+  }
+
+  try {
+    const existing = await prisma.student.findFirst({
+      where: { messCardSerialNumber: newSerial },
+    });
+    if (existing && existing.id !== studentId) {
+      return {
+        success: false,
+        message: `Serial number ${newSerial} is already allotted to ${existing.rollNo}.`,
+      };
+    }
+
+    const updatedStudent = await prisma.student.update({
+      where: { id: studentId },
+      data: { messCardSerialNumber: newSerial },
+    });
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/admin/allotted-list");
+    return { success: true, message: "Serial number updated successfully!", student: updatedStudent };
+  } catch (error: unknown) {
+    console.error("Error updating serial:", error);
+    const prismaError = error as { code?: string; meta?: { target?: string[] } };
+    if (prismaError.code === "P2002") {
+      return { success: false, message: `Serial number ${newSerial} is already in use.` };
+    }
+    return { success: false, message: "Failed to update serial number." };
+  }
+}
+
 export async function revokeMessCard(
   studentId: string
 ): Promise<{ success: boolean; message: string; student?: Student }> {
@@ -176,16 +241,32 @@ export async function revokeMessCard(
   }
 }
 
-export async function getAllottedStudents(page = 1, pageSize = 50): Promise<{ students: Student[]; total: number }> {
+export async function getAllottedStudents(
+  page = 1,
+  pageSize = 50,
+  filters?: { department?: string; mess?: string },
+  sort?: { field: string; order: "asc" | "desc" }
+): Promise<{ students: Student[]; total: number }> {
   try {
     const where = {
       messCardSerialNumber: { not: null },
       messCardAllottedAt: { not: null },
+      ...(filters?.department ? { department: filters.department } : {}),
+      ...(filters?.mess ? { allottedMess: filters.mess } : {}),
     };
+
+    const orderBy = sort?.field === "rollNo"
+      ? { rollNo: sort.order }
+      : sort?.field === "messCardAllottedAt"
+      ? { messCardAllottedAt: sort.order }
+      : sort?.field === "messCardSerialNumber"
+      ? { messCardSerialNumber: sort.order }
+      : { name: (sort?.order ?? "asc") as "asc" | "desc" };
+
     const [students, total] = await Promise.all([
       prisma.student.findMany({
         where,
-        orderBy: { name: "asc" },
+        orderBy,
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
@@ -198,14 +279,36 @@ export async function getAllottedStudents(page = 1, pageSize = 50): Promise<{ st
   }
 }
 
-export async function generateAllottedStudentsCSV(): Promise<string> {
+export async function getAllottedFilters(): Promise<{
+  departments: string[];
+  messes: string[];
+}> {
   try {
-    // Fetch all for CSV export (no pagination)
     const students = await prisma.student.findMany({
-      where: {
-        messCardSerialNumber: { not: null },
-        messCardAllottedAt: { not: null },
-      },
+      where: { messCardSerialNumber: { not: null } },
+      select: { department: true, allottedMess: true },
+    });
+    const departments = [...new Set(students.map((s) => s.department).filter(Boolean) as string[])].sort();
+    const messes = [...new Set(students.map((s) => s.allottedMess))].sort();
+    return { departments, messes };
+  } catch {
+    return { departments: [], messes: [] };
+  }
+}
+
+export async function generateAllottedStudentsCSV(
+  filters?: { department?: string; mess?: string }
+): Promise<string> {
+  try {
+    const where = {
+      messCardSerialNumber: { not: null },
+      messCardAllottedAt: { not: null },
+      ...(filters?.department ? { department: filters.department } : {}),
+      ...(filters?.mess ? { allottedMess: filters.mess } : {}),
+    };
+
+    const students = await prisma.student.findMany({
+      where,
       orderBy: { name: "asc" },
     });
 
@@ -287,10 +390,7 @@ export async function importStudentsFromCSV(formData: FormData): Promise<ImportR
 
   for (const row of parsed.data) {
     const rollNo = row[CSV_COLUMN_MAP.rollNo]?.trim();
-    if (!rollNo) {
-      skipped++;
-      continue;
-    }
+    if (!rollNo) { skipped++; continue; }
 
     const email = row[CSV_COLUMN_MAP.email]?.trim() || null;
     const ageRaw = parseInt(row[CSV_COLUMN_MAP.age] ?? "");
@@ -322,7 +422,6 @@ export async function importStudentsFromCSV(formData: FormData): Promise<ImportR
       await prisma.student.upsert({
         where: { rollNo: studentData.rollNo },
         update: {
-          // Update non-card fields on re-import; preserve mess card allocation
           name: studentData.name,
           gender: studentData.gender,
           allottedHostel: studentData.allottedHostel,
@@ -338,7 +437,6 @@ export async function importStudentsFromCSV(formData: FormData): Promise<ImportR
     } catch (error: unknown) {
       const prismaError = error as { code?: string; meta?: { target?: string[] } };
       if (prismaError.code === "P2002" && prismaError.meta?.target?.includes("email")) {
-        // Retry without email if it conflicts with another student's record
         try {
           await prisma.student.upsert({
             where: { rollNo: studentData.rollNo },
