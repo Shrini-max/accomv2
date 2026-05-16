@@ -1,4 +1,3 @@
-// app/admin/allotted-list/page.tsx
 import { getAllottedStudents } from "@/lib/actions";
 import { Student } from "@prisma/client";
 import {
@@ -11,33 +10,41 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import Link from "next/link"; // We'll create this client component
+import Link from "next/link";
 import DownloadCSVButton from "./DownloadCSVButton";
 
-export const dynamic = "force-dynamic"; // Ensure fresh data on each request
+export const dynamic = "force-dynamic";
 
-export default async function AllottedListPage() {
-  const allottedStudents: Student[] = await getAllottedStudents();
+const PAGE_SIZE = 50;
+
+interface Props {
+  searchParams: { page?: string };
+}
+
+export default async function AllottedListPage({ searchParams }: Props) {
+  const page = Math.max(1, parseInt(searchParams.page ?? "1") || 1);
+  const { students, total } = await getAllottedStudents(page, PAGE_SIZE);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <div className="container mx-auto p-4 md:p-8">
       <div className="flex justify-between items-center mb-6">
-        <Link href={"/admin/dashboard"}>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        </Link>
-        <Link href="/admin/dashboard">
-          <Button variant="outline">Back to Dashboard</Button>
-        </Link>
+        <h1 className="text-3xl font-bold">Allotted Mess Cards</h1>
+        <div className="flex gap-2">
+          {students.length > 0 && <DownloadCSVButton />}
+          <Link href="/admin/dashboard">
+            <Button variant="outline">Back to Dashboard</Button>
+          </Link>
+        </div>
       </div>
-      {allottedStudents.length > 0 ? (
+
+      {students.length > 0 ? (
         <>
-          <div className="mb-4 flex justify-end">
-            <DownloadCSVButton />
-          </div>
+          <p className="text-sm text-gray-500 mb-4">
+            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total} students
+          </p>
           <Table>
-            <TableCaption>
-              A list of students who have been allotted mess cards.
-            </TableCaption>
+            <TableCaption>Students with allotted mess cards.</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>Roll No.</TableHead>
@@ -49,33 +56,43 @@ export default async function AllottedListPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {allottedStudents.map((student) => (
+              {students.map((student: Student) => (
                 <TableRow key={student.id}>
-                  <TableCell className="font-medium">
-                    {student.rollNo}
-                  </TableCell>
+                  <TableCell className="font-medium">{student.rollNo}</TableCell>
                   <TableCell>{student.name}</TableCell>
-                  <TableCell>{student.department || "N/A"}</TableCell>
+                  <TableCell>{student.department ?? "N/A"}</TableCell>
                   <TableCell>{student.messCardSerialNumber}</TableCell>
                   <TableCell>
                     {student.messCardAllottedAt
-                      ? new Date(
-                          student.messCardAllottedAt
-                        ).toLocaleDateString()
+                      ? new Date(student.messCardAllottedAt).toLocaleDateString()
                       : "N/A"}
                   </TableCell>
-                  <TableCell>
-                    {student.allottedHostel} ({student.roomNo})
-                  </TableCell>
+                  <TableCell>{student.allottedHostel} ({student.roomNo})</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-3 mt-6">
+              {page > 1 && (
+                <Link href={`/admin/allotted-list?page=${page - 1}`}>
+                  <Button variant="outline" size="sm">Previous</Button>
+                </Link>
+              )}
+              <span className="text-sm text-gray-600">
+                Page {page} of {totalPages}
+              </span>
+              {page < totalPages && (
+                <Link href={`/admin/allotted-list?page=${page + 1}`}>
+                  <Button variant="outline" size="sm">Next</Button>
+                </Link>
+              )}
+            </div>
+          )}
         </>
       ) : (
-        <p className="text-center text-gray-500">
-          No students have been allotted mess cards yet.
-        </p>
+        <p className="text-center text-gray-500">No students have been allotted mess cards yet.</p>
       )}
     </div>
   );
