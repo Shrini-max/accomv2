@@ -169,8 +169,6 @@ export async function allotMessCard(
       where: { id: studentId },
       data: { messCardSerialNumber: serialNumber, messCardAllottedAt: new Date() },
     });
-    revalidatePath("/admin/dashboard");
-    revalidatePath("/admin/allotted-list");
     return { success: true, message: "Mess card allotted successfully!", student: updatedStudent };
   } catch (error: unknown) {
     console.error("Error allotting mess card:", error);
@@ -205,8 +203,6 @@ export async function updateMessCardSerial(
       where: { id: studentId },
       data: { messCardSerialNumber: newSerial },
     });
-    revalidatePath("/admin/dashboard");
-    revalidatePath("/admin/allotted-list");
     return { success: true, message: "Serial number updated successfully!", student: updatedStudent };
   } catch (error: unknown) {
     console.error("Error updating serial:", error);
@@ -232,8 +228,6 @@ export async function revokeMessCard(
       where: { id: studentId },
       data: { messCardSerialNumber: null, messCardAllottedAt: null },
     });
-    revalidatePath("/admin/dashboard");
-    revalidatePath("/admin/allotted-list");
     return { success: true, message: "Mess card revoked successfully!", student: updatedStudent };
   } catch (error) {
     console.error("Error revoking mess card:", error);
