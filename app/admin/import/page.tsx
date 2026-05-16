@@ -20,7 +20,7 @@ import {
 import { Upload, FileText, CheckCircle, XCircle, AlertTriangle, Trash2 } from "lucide-react";
 import Link from "next/link";
 
-const EXPECTED_COLUMNS = Object.values(CSV_COLUMN_MAP).filter((col) => col !== "S. No");
+const EXPECTED_COLUMNS = Object.values(CSV_COLUMN_MAP);
 
 export default function ImportPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
