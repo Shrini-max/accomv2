@@ -18,11 +18,12 @@ export const dynamic = "force-dynamic";
 const PAGE_SIZE = 50;
 
 interface Props {
-  searchParams: { page?: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default async function AllottedListPage({ searchParams }: Props) {
-  const page = Math.max(1, parseInt(searchParams.page ?? "1") || 1);
+  const pageParam = Array.isArray(searchParams.page) ? searchParams.page[0] : searchParams.page;
+  const page = Math.max(1, parseInt(pageParam ?? "1") || 1);
   const { students, total } = await getAllottedStudents(page, PAGE_SIZE);
   const totalPages = Math.ceil(total / PAGE_SIZE);
 

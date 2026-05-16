@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { importStudentsFromCSV, clearAllStudents, ImportResult } from "@/lib/actions";
+import { importStudentsFromCSV, clearAllStudents } from "@/lib/actions";
+import type { ImportResult } from "@/lib/actions";
 import { CSV_COLUMN_MAP } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
