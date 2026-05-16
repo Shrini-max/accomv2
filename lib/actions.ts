@@ -288,8 +288,8 @@ export async function getAllottedFilters(): Promise<{
       where: { messCardSerialNumber: { not: null } },
       select: { department: true, allottedMess: true },
     });
-    const departments = [...new Set(students.map((s) => s.department).filter(Boolean) as string[])].sort();
-    const messes = [...new Set(students.map((s) => s.allottedMess))].sort();
+    const departments = Array.from(new Set(students.map((s) => s.department).filter(Boolean) as string[])).sort();
+    const messes = Array.from(new Set(students.map((s) => s.allottedMess))).sort();
     return { departments, messes };
   } catch {
     return { departments: [], messes: [] };
