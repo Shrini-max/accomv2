@@ -169,14 +169,14 @@ export async function allotMessCard(
       where: { id: studentId },
       data: { messCardSerialNumber: serialNumber, messCardAllottedAt: new Date() },
     });
-    return { success: true, message: "Accommodation card allotted successfully!", student: updatedStudent };
+    return { success: true, message: "Mess card allotted successfully!", student: updatedStudent };
   } catch (error: unknown) {
-    console.error("Error allotting accommodation card:", error);
+    console.error("Error allotting mess card:", error);
     const prismaError = error as { code?: string; meta?: { target?: string[] } };
     if (prismaError.code === "P2002" && prismaError.meta?.target?.includes("messCardSerialNumber")) {
       return { success: false, message: `Serial number ${serialNumber} is already in use.` };
     }
-    return { success: false, message: "Failed to allot accommodation card. Database error." };
+    return { success: false, message: "Failed to allot mess card. Database error." };
   }
 }
 
@@ -221,17 +221,17 @@ export async function revokeMessCard(
     const student = await prisma.student.findUnique({ where: { id: studentId } });
     if (!student) return { success: false, message: "Student not found." };
     if (!student.messCardSerialNumber) {
-      return { success: false, message: "No accommodation card is currently allotted to this student." };
+      return { success: false, message: "No mess card is currently allotted to this student." };
     }
 
     const updatedStudent = await prisma.student.update({
       where: { id: studentId },
       data: { messCardSerialNumber: null, messCardAllottedAt: null },
     });
-    return { success: true, message: "Accommodation card revoked successfully!", student: updatedStudent };
+    return { success: true, message: "Mess card revoked successfully!", student: updatedStudent };
   } catch (error) {
-    console.error("Error revoking accommodation card:", error);
-    return { success: false, message: "Failed to revoke accommodation card. Database error." };
+    console.error("Error revoking mess card:", error);
+    return { success: false, message: "Failed to revoke mess card. Database error." };
   }
 }
 
@@ -314,7 +314,7 @@ export async function generateAllottedStudentsCSV(
       Department: student.department ?? "N/A",
       "Allotted Hostel": student.allottedHostel,
       "Room No.": student.roomNo,
-      "Accommodation Card Serial No.": student.messCardSerialNumber,
+      "Mess Card Serial No.": student.messCardSerialNumber,
       "Allotted At": student.messCardAllottedAt
         ? new Date(student.messCardAllottedAt).toLocaleString()
         : "N/A",

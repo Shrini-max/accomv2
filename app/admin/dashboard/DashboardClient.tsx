@@ -202,7 +202,7 @@ export default function DashboardClient() {
                   <div className="md:col-span-2 p-3 bg-green-100 dark:bg-green-900/30 rounded-md flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-green-700 dark:text-green-400">
-                        Accommodation Card: #{searchedStudent.messCardSerialNumber}
+                        Mess Card: #{searchedStudent.messCardSerialNumber}
                       </p>
                       <p className="text-sm text-green-600 dark:text-green-500">
                         Allotted on: {new Date(searchedStudent.messCardAllottedAt!).toLocaleDateString()}
