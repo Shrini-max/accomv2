@@ -26,6 +26,7 @@ import {
 } from "@/lib/actions";
 import { MESS_CARD_SERIAL_LENGTH } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 import { Copy, Check, Pencil, Users } from "lucide-react";
 
 export default function DashboardClient() {
@@ -51,6 +52,7 @@ export default function DashboardClient() {
   const [isLoadingUnallotted, startUnallottedTransition] = useTransition();
 
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleSearch = (e?: FormEvent) => {
     if (e) e.preventDefault();
@@ -84,6 +86,7 @@ export default function DashboardClient() {
         setMessCardSerial("");
         setDialogOpen(false);
         toast({ title: "Success", description: result.message });
+        router.refresh();
       } else {
         toast({ title: "Error", description: result.message, variant: "destructive" });
       }
@@ -103,6 +106,7 @@ export default function DashboardClient() {
         setEditSerial("");
         setEditDialogOpen(false);
         toast({ title: "Success", description: result.message });
+        router.refresh();
       } else {
         toast({ title: "Error", description: result.message, variant: "destructive" });
       }
@@ -116,6 +120,7 @@ export default function DashboardClient() {
       if (result.success && result.student) {
         setSearchedStudent(result.student);
         toast({ title: "Success", description: result.message });
+        router.refresh();
       } else {
         toast({ title: "Error", description: result.message, variant: "destructive" });
       }
