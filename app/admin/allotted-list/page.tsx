@@ -75,7 +75,7 @@ export default async function AllottedListPage({ searchParams }: Props) {
             </p>
           )}
           <Table>
-            <TableCaption>Students with allotted accom cards.</TableCaption>
+            <TableCaption>Students with allotted accommodation cards.</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>Roll No.</TableHead>

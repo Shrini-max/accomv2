@@ -271,7 +271,7 @@ export default function ImportPage() {
             <Trash2 className="h-5 w-5" /> Danger Zone
           </CardTitle>
           <CardDescription>
-            Permanently delete all student records including accom card allocations. Cannot be undone.
+            Permanently delete all student records including accommodation card allocations. Cannot be undone.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -285,7 +285,7 @@ export default function ImportPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete all student records?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This permanently deletes every student record and all accom card allocations.
+                  This permanently deletes every student record and all accommodation card allocations.
                   You will need to re-import your data from a CSV file.
                 </AlertDialogDescription>
               </AlertDialogHeader>
