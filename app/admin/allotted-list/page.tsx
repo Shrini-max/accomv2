@@ -51,7 +51,7 @@ export default async function AllottedListPage({ searchParams }: Props) {
   return (
     <div className="container mx-auto p-4 md:p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Allotted Mess Cards</h1>
+        <h1 className="text-3xl font-bold">Allotted Cards</h1>
         {students.length > 0 && (
           <DownloadCSVButton filters={{ department: dept || undefined, mess: mess || undefined }} />
         )}
@@ -75,7 +75,7 @@ export default async function AllottedListPage({ searchParams }: Props) {
             </p>
           )}
           <Table>
-            <TableCaption>Students with allotted mess cards.</TableCaption>
+            <TableCaption>Students with allotted accom cards.</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>Roll No.</TableHead>
@@ -129,7 +129,7 @@ export default async function AllottedListPage({ searchParams }: Props) {
         </>
       ) : (
         <p className="text-center text-muted-foreground py-12">
-          {dept || mess ? "No students match the current filters." : "No students have been allotted mess cards yet."}
+          {dept || mess ? "No students match the current filters." : "No students have been allotted cards yet."}
         </p>
       )}
     </div>

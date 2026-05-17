@@ -5,8 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "Mess Portal",
-  description: "Mess card check-in and allocation system",
+  title: "Accom Check-in | IIT Madras Paradox",
+  description: "Accommodation check-in and card allocation system for IIT Madras Paradox",
 };
 
 const poppins = Poppins({

@@ -214,7 +214,7 @@ export default function DashboardClient() {
                   </div>
                 ) : (
                   <div className="md:col-span-2 p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-md">
-                    <p className="font-semibold text-yellow-700 dark:text-yellow-400">Mess Card Not Yet Allotted</p>
+                    <p className="font-semibold text-yellow-700 dark:text-yellow-400">Card Not Yet Allotted</p>
                   </div>
                 )}
               </CardContent>
@@ -222,11 +222,11 @@ export default function DashboardClient() {
                 {!searchedStudent.messCardSerialNumber ? (
                   <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setMessCardSerial(""); }}>
                     <DialogTrigger asChild>
-                      <Button>Provide Mess Card</Button>
+                      <Button>Provide Card</Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                       <DialogHeader>
-                        <DialogTitle>Allot Mess Card for {searchedStudent.name}</DialogTitle>
+                        <DialogTitle>Allot Card for {searchedStudent.name}</DialogTitle>
                         <DialogDescription>Enter the {MESS_CARD_SERIAL_LENGTH}-digit serial number.</DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
@@ -251,7 +251,7 @@ export default function DashboardClient() {
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
-                          <DialogTitle>Edit Mess Card Serial</DialogTitle>
+                          <DialogTitle>Edit Card Serial</DialogTitle>
                           <DialogDescription>Current: #{searchedStudent.messCardSerialNumber}. Enter the new {MESS_CARD_SERIAL_LENGTH}-digit serial.</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
@@ -304,7 +304,7 @@ export default function DashboardClient() {
               {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-12 rounded-md bg-muted" />)}
             </div>
           ) : unallottedStudents.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">All students have been allotted mess cards.</p>
+            <p className="text-center text-muted-foreground py-8">All students have been allotted cards.</p>
           ) : (
             <>
               <p className="text-sm text-muted-foreground mb-3">

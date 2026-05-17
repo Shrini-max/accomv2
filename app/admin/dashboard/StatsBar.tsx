@@ -11,7 +11,7 @@ export async function StatsBar() {
       </Card>
       <Card className="text-center py-3">
         <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.allotted}</p>
-        <p className="text-xs text-muted-foreground">Cards Allotted</p>
+        <p className="text-xs text-muted-foreground">Cards Allocated</p>
       </Card>
       <Card className="text-center py-3">
         <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.unallotted}</p>

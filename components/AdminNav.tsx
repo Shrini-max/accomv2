@@ -40,7 +40,7 @@ export function AdminNav() {
       <div className="container mx-auto px-4 md:px-8 flex items-center justify-between h-14">
         {/* Left: logo + breadcrumb */}
         <div className="flex items-center gap-2 text-sm">
-          <span className="font-semibold text-base">Mess Portal</span>
+          <span className="font-semibold text-base">Accom Check-in</span>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
           <span className="text-muted-foreground">{breadcrumb}</span>
         </div>

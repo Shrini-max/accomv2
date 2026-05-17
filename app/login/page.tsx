@@ -38,8 +38,8 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
         className="p-8 bg-card border border-border rounded-lg shadow-md w-full max-w-sm"
       >
-        <h1 className="text-2xl font-semibold mb-2 text-center">Mess Portal</h1>
-        <p className="text-sm text-muted-foreground text-center mb-6">Admin Login</p>
+        <h1 className="text-2xl font-semibold mb-2 text-center">Accom Check-in</h1>
+        <p className="text-sm text-muted-foreground text-center mb-6">IIT Madras Paradox · Admin Login</p>
         <div className="mb-4">
           <Label htmlFor="password">Password</Label>
           <Input
