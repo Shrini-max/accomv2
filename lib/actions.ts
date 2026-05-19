@@ -113,11 +113,22 @@ export async function getStudentStats(): Promise<{
 }
 
 // --- Student queries ---
-export async function getStudentByRollNo(rollNo: string): Promise<Student | null> {
-  if (!rollNo?.trim()) return null;
+export async function getStudentByRollNo(query: string): Promise<Student | null> {
+  if (!query?.trim()) return null;
+  const q = query.trim();
   try {
-    return await prisma.student.findUnique({
-      where: { rollNo: rollNo.trim().toUpperCase() },
+    return await prisma.student.findFirst({
+      where: {
+        OR: [
+          { rollNo: { equals: q.toUpperCase() } },
+          { rollNo: { contains: q, mode: "insensitive" } },
+          { name: { contains: q, mode: "insensitive" } },
+          { email: { contains: q, mode: "insensitive" } },
+          { mobileNo: { contains: q, mode: "insensitive" } },
+          { allottedHostel: { contains: q, mode: "insensitive" } },
+          { roomNo: { contains: q, mode: "insensitive" } },
+        ],
+      },
     });
   } catch (error) {
     console.error("Error fetching student:", error);

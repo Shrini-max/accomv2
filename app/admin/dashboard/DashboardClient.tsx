@@ -167,12 +167,12 @@ export default function DashboardClient() {
         <>
           <form onSubmit={handleSearch} className="flex gap-2 mb-6 items-end">
             <div className="flex-grow">
-              <Label htmlFor="rollNo">Search by Roll No.</Label>
+              <Label htmlFor="rollNo">Search by Roll No., Name, Email or Mobile</Label>
               <Input
                 id="rollNo"
                 value={rollNo}
-                onChange={(e) => setRollNo(e.target.value.toUpperCase())}
-                placeholder="E.g., B22CS001"
+                onChange={(e) => setRollNo(e.target.value)}
+                placeholder="E.g., B22CS001, T Shrinivasan, 9876543210"
                 disabled={isSearching}
               />
             </div>
